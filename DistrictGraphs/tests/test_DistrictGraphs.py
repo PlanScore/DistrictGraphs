@@ -1,11 +1,34 @@
-from .. import shared_linear_boundary
+from .. import shared_linear_boundary, blocks_frame_graph, OUTSIDE
 
 import unittest
 import shapely.geometry, shapely.wkt
+import geopandas
+import os
 
+TESTS_DATA = os.path.join(os.path.dirname(__file__), 'data')
+
+# DE-9IM pattern for two identical lines
 SAME_LINES = '1FFF0FFF2'
 
 class TestBlocks (unittest.TestCase):
+    
+    def test_load_block_graph(self):
+        frame = geopandas.read_file(os.path.join(TESTS_DATA, 'kohl-center.geojson'))
+        graph = blocks_frame_graph(frame, 'GEOID10')
+        
+        self.assertEqual(len(graph.nodes), 11)
+        self.assertEqual(len(graph.edges), 14 * 2 + 9 * 2)
+        self.assertEqual(len(list(graph.neighbors(OUTSIDE))), 9)
+
+        self.assertNotIn(('550250012001004', OUTSIDE), graph.edges)
+        self.assertIn(('550250012001004', '550250012001003'), graph.edges)
+        self.assertIn(('550250012001003', OUTSIDE), graph.edges)
+        self.assertIn(('550250012001003', '550250016063003'), graph.edges)
+        self.assertIn(('550250016063003', OUTSIDE), graph.edges)
+        self.assertNotIn(('550250012001004', '550250016063003'), graph.edges)
+        self.assertIn(('550250016063003', '550250016052009'), graph.edges)
+        self.assertIn(('550250016052009', '550250016051004'), graph.edges)
+        self.assertNotIn(('550250016051004', '550250016063003'), graph.edges)
 
     def test_shared_linear_boundary_simple(self):
         # GEOIDs 550250011012019, 550250011012020 share a single edge
