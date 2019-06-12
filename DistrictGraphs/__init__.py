@@ -9,6 +9,8 @@ CONTIGUOUS = 'F***1****'
 # Magic name for the node representing outside a graph
 OUTSIDE = 'outside'
 
+logger = logging.getLogger(__name__)
+
 def blocks_frame_graph(blocks, geoid):
     ''' Return graph representation of frame.
     
@@ -37,7 +39,7 @@ def blocks_frame_graph(blocks, geoid):
                 line=shared_linear_boundary(geom1, geom2))
     
     _elapsed, _start_time = time.time() - _start_time, time.time()
-    logging.debug(f'Out of {_possibles} possible connections,'
+    logger.debug(f'Out of {_possibles} possible connections,'
         f' reduced {_candidates} candidates to {_connections} contiguous pairs'
         f' in {_elapsed:.3f} seconds.')
 
@@ -59,7 +61,7 @@ def blocks_frame_graph(blocks, geoid):
             graph.add_edge(OUTSIDE, node1_id, line=node1_perimeter)
     
     _elapsed = time.time() - _start_time
-    logging.debug(f'Found outside blocks in {_elapsed:.3f} seconds.')
+    logger.debug(f'Found outside blocks in {_elapsed:.3f} seconds.')
 
     return graph
 

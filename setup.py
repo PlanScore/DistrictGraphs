@@ -24,6 +24,7 @@ setup(
         },
     entry_points = dict(
         console_scripts = [
+            'geo2graph = DistrictGraphs.geo2graph:main',
             ]
         ),
 )

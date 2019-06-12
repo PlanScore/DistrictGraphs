@@ -4,6 +4,8 @@
 *.qpj
 *.shp
 *.shx
+*.shx
+*.pickle
 .ipynb_checkpoints
 .venv-*
 *.egg-info
