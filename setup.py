@@ -15,6 +15,7 @@ setup(
     install_requires = [
         'Shapely == 1.6.4.post2',
         'networkx == 2.3',
+        'boto3 == 1.9.169',
         ],
     extras_require = {
         'convert': [
@@ -26,6 +27,7 @@ setup(
     entry_points = dict(
         console_scripts = [
             'geo2graph = DistrictGraphs.geo2graph:main',
+            'dwim = DistrictGraphs.dwim:main',
             ]
         ),
 )

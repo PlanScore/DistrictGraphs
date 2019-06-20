@@ -6,6 +6,8 @@
 *.shx
 *.shx
 *.pickle
+*.zip
+*.gz
 .ipynb_checkpoints
 .venv-*
 *.egg-info
