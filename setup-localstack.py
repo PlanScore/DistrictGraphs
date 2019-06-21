@@ -12,6 +12,7 @@ if 'AWS_LAMBDA_DLQ_ARN' in os.environ:
 
 functions = {
     'DistrictGraphs-dwim': dict(Handler='lambda.dwim', Timeout=300, MemorySize=2048, **common),
+    'DistrictGraphs-upload_url': dict(Handler='lambda.upload_url', Timeout=300, MemorySize=2048, **common),
     }
 
 def publish_function(lam, name, path, env, role):
@@ -73,7 +74,7 @@ env = {
 
 print('    Environment:', ' '.join(['='.join(kv) for kv in env.items()]))
 
-function_arn = publish_function(lam, 'DistrictGraphs-dwim', CODE_PATH, env, 'nobody')
+function_arn = publish_function(lam, 'DistrictGraphs-upload_url', CODE_PATH, env, 'nobody')
 
 # API Gateway setup
 
@@ -84,16 +85,21 @@ rest_api_id = api.create_rest_api(name='DistrictGraphs')['id']
 parent_id = api.get_resources(restApiId=rest_api_id)['items'][0]['id']
 api_kwargs = dict(restApiId=rest_api_id, parentId=parent_id)
 
-resource_id = api.create_resource(pathPart='dwim', **api_kwargs)['id']
+resource_id = api.create_resource(pathPart='upload_url', **api_kwargs)['id']
 api_kwargs = dict(restApiId=rest_api_id, resourceId=resource_id)
+print('    Args:', api_kwargs)
 
-api.put_method(httpMethod='POST', authorizationType='NONE', **api_kwargs)
-api.put_integration(httpMethod='POST', type='AWS_PROXY',
+api.put_method(httpMethod='GET', authorizationType='NONE', 
+    requestParameters={'method.request.querystring.filename': True},
+    **api_kwargs)
+api.put_integration(httpMethod='GET', type='AWS_PROXY',
     integrationHttpMethod='POST', passthroughBehavior='WHEN_NO_MATCH',
     uri=f'arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/{function_arn}/invocations',
+    #requestParameters={'integration.request.querystring.filename': 'method.request.querystring.filename'},
     **api_kwargs)
+api.create_deployment(stageName='test', restApiId=rest_api_id)
 
-print('    URL:', f'http://localhost:4567/restapis/{rest_api_id}/test/_user_request_/dwim')
+print('    URL:', f'http://localhost:4567/restapis/{rest_api_id}/test/_user_request_/upload_url')
 
 # S3 Bucket setup
 
