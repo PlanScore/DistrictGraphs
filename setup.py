@@ -16,6 +16,8 @@ setup(
         'Shapely == 1.6.4.post2',
         'networkx == 2.3',
         'boto3 == 1.9.169',
+        'botocore == 1.12.174',
+        'itsdangerous == 0.24',
         ],
     extras_require = {
         'convert': [
