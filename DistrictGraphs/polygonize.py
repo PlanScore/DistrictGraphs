@@ -1,9 +1,20 @@
 import logging
+import io
+import csv
 import collections
 import networkx
 import shapely
 
 logger = logging.getLogger(__name__)
+
+Assignment = collections.namedtuple('Assignment', ('block', 'district'))
+
+def parse_assignments(file):
+    '''
+    '''
+    rows = csv.reader(io.StringIO(file.read().decode('utf8')))
+    assignments = [Assignment(block, district) for (block, district) in rows]
+    return assignments
 
 def polygonize_assignment(assignments, graph):
     '''
@@ -11,8 +22,8 @@ def polygonize_assignment(assignments, graph):
     district_nodes = collections.defaultdict(list)
     district_polys = dict()
     
-    for (node_id, district_id) in assignments:
-        district_nodes[district_id].append(node_id)
+    for assignment in assignments:
+        district_nodes[assignment.district].append(assignment.block)
     
     for (district_id, node_ids) in district_nodes.items():
         multipoint = shapely.geometry.MultiPoint([graph.node[id]['pos'] for id in node_ids])

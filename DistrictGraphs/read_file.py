@@ -12,8 +12,7 @@ def lambda_handler(event, context):
     
     s3 = boto3.client('s3', endpoint_url=constants.S3_ENDPOINT_URL)
     object = s3.get_object(Bucket='districtgraphs', Key=id)
-    rows = csv.reader(io.StringIO(object['Body'].read().decode('utf8')))
-    assignments = list(rows)
+    assignments = polygonize.parse_assignments(object['Body'])
     
     path = os.path.join(os.path.dirname(__file__), 'tests/data/madison3.pickle')
     graph = networkx.read_gpickle(path)
