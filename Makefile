@@ -6,6 +6,9 @@ dgraphs-lambda.zip: gdal-geos-python.tar.gz
 	cp lambda.py dgraphs-lambda/lambda.py
 	cd dgraphs-lambda && zip -rq ../dgraphs-lambda.zip .
 
+gdal-geos-python.tar.gz:
+	curl https://planscore.s3.amazonaws.com/code/gdal-2.1.3-geos-3.6.1-python-3.6.1.tar.gz -o $@ -s
+
 clean:
 	rm -rf dgraphs-lambda dgraphs-lambda.zip
 

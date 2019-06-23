@@ -18,6 +18,7 @@ setup(
         'boto3 == 1.9.169',
         'botocore == 1.12.174',
         'itsdangerous == 0.24',
+        'progressbar2 == 3.42.0',
         ],
     extras_require = {
         'convert': [
