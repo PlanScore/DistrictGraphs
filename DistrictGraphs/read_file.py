@@ -17,13 +17,13 @@ def lambda_handler(event, context):
     path = os.path.join(os.path.dirname(__file__), 'tests/data/madison3.pickle')
     graph = networkx.read_gpickle(path)
     districts = polygonize.polygonize_assignment(assignments, graph)
+    geojson = polygonize.districts_geojson(districts)
     
     return {
         'statusCode': '200',
-        'headers': {'Access-Control-Allow-Origin': '*'},
-        'body': {
-            'id': id,
-            'assignments': assignments,
-            'districts': {id: str(geom) for (id, geom) in districts.items()},
-            }
+        'headers': {
+            'Access-Control-Allow-Origin': '*',
+            'Content-Type': 'application/json',
+            },
+        'body': geojson
         }

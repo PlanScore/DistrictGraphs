@@ -16,6 +16,20 @@ def parse_assignments(file):
     assignments = [Assignment(block, district) for (block, district) in rows]
     return assignments
 
+def districts_geojson(districts):
+    '''
+    '''
+    features = [{
+        'type': 'Feature',
+        'properties': {'district': district_id},
+        'geometry': shapely.geometry.mapping(geometry),
+        } for (district_id, geometry) in districts.items()]
+    geojson = {
+        'type': 'FeatureCollection',
+        'features': features,
+        }
+    return geojson
+
 def polygonize_assignment(assignments, graph):
     '''
     '''

@@ -72,6 +72,21 @@ class TestPolygonize (unittest.TestCase):
             center = shapely.geometry.Point(graph.nodes[assignment.block]['pos'])
             self.assertTrue(actual.contains(center))
     
+    def test_districts_geojson(self):
+        districts = {
+            'a': shapely.geometry.Point(0, 1).buffer(1),
+            'b': shapely.geometry.Point(1, 0).buffer(1),
+            }
+        
+        geojson = polygonize.districts_geojson(districts)
+        
+        self.assertEqual(geojson['type'], 'FeatureCollection')
+        self.assertEqual(len(geojson['features']), 2)
+        self.assertEqual(geojson['features'][0]['properties']['district'], 'a')
+        self.assertEqual(geojson['features'][1]['properties']['district'], 'b')
+        self.assertEqual(geojson['features'][0]['geometry']['type'], 'Polygon')
+        self.assertEqual(geojson['features'][1]['geometry']['type'], 'Polygon')
+    
     def test_polygonize_assignment2(self):
         graph = networkx.read_gpickle(os.path.join(TESTS_DATA, 'madison3.pickle'))
         
