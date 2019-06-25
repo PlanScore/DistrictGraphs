@@ -1,3 +1,8 @@
+live-lambda: dgraphs-lambda.zip
+	env AWS=amazonaws.com \
+		parallel -j9 ./deploy.py dgraphs-lambda.zip \
+		::: DistrictGraphs-upload_file DistrictGraphs-read_file
+
 # Just one Lambda codebase is created, with different entry points and environments.
 dgraphs-lambda.zip: gdal-geos-python.tar.gz
 	mkdir -p dgraphs-lambda
