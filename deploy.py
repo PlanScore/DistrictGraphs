@@ -70,17 +70,25 @@ def publish_api(api, api_name, function_arn, path):
         resource = api.create_resource(pathPart=path, **api_kwargs)
     finally:
         api_kwargs = dict(restApiId=rest_api_id, resourceId=resource['id'])
+    
+    try:
+        print('    * put method', rest_api_id, 'GET', path, file=sys.stderr)
+        api.put_method(httpMethod='GET', authorizationType='NONE', 
+            requestParameters={'method.request.querystring.filename': True},
+            **api_kwargs)
+    except:
+        print('    * method exists?', rest_api_id, 'GET', path, file=sys.stderr)
 
-    print('    * put method, integration, and deployment', file=sys.stderr)
+    try:
+        print('    * put integration', rest_api_id, 'GET', path, file=sys.stderr)
+        api.put_integration(httpMethod='GET', type='AWS_PROXY',
+            integrationHttpMethod='POST', passthroughBehavior='WHEN_NO_MATCH',
+            uri=f'arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/{function_arn}/invocations',
+            #requestParameters={'integration.request.querystring.filename': 'method.request.querystring.filename'},
+            **api_kwargs)
+    except:
+        print('    * integration exists?', rest_api_id, 'GET', path, file=sys.stderr)
 
-    api.put_method(httpMethod='GET', authorizationType='NONE', 
-        requestParameters={'method.request.querystring.filename': True},
-        **api_kwargs)
-    api.put_integration(httpMethod='GET', type='AWS_PROXY',
-        integrationHttpMethod='POST', passthroughBehavior='WHEN_NO_MATCH',
-        uri=f'arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/{function_arn}/invocations',
-        #requestParameters={'integration.request.querystring.filename': 'method.request.querystring.filename'},
-        **api_kwargs)
     api.create_deployment(stageName='test', restApiId=rest_api_id)
 
     print('    * done with', f'{api._endpoint.host}/restapis/{rest_api_id}/test/_user_request_/{path}')
