@@ -14,6 +14,22 @@ functions = {
     'DistrictGraphs-read_file': dict(Handler='lambda.read_file', Timeout=300, MemorySize=2048, **common),
     }
 
+api_methods = {
+    'DistrictGraphs-upload_file': dict(httpMethod='GET', authorizationType='NONE',
+        requestParameters={'method.request.querystring.filename': True}),
+    'DistrictGraphs-read_file': dict(httpMethod='GET', authorizationType='NONE',
+        requestParameters={'method.request.querystring.signature': True}),
+    }
+
+api_integrations = {
+    'DistrictGraphs-upload_file': dict(httpMethod='GET',
+        #requestParameters={'integration.request.querystring.filename': 'method.request.querystring.filename'},
+        ),
+    'DistrictGraphs-read_file': dict(httpMethod='GET',
+        #requestParameters={'integration.request.querystring.signature': 'method.request.querystring.signature'},
+        ),
+    }
+
 def publish_function(lam, name, path, env, role):
     ''' Create or update the named function to Lambda, return its ARN.
     '''
@@ -46,9 +62,11 @@ def publish_function(lam, name, path, env, role):
     
     return arn
 
-def publish_api(api, api_name, function_arn, path, role):
+def publish_api(api, api_name, function_arn, function_name, role):
     '''
     '''
+    path = function_name.split('-')[-1]
+    
     try:
         print('    * get API', api_name, file=sys.stderr)
         rest_api = [item for item in api.get_rest_apis()['items']
@@ -73,23 +91,22 @@ def publish_api(api, api_name, function_arn, path, role):
     
     try:
         print('    * put method', rest_api_id, 'GET', path, file=sys.stderr)
-        api.put_method(httpMethod='GET', authorizationType='NONE', 
-            requestParameters={'method.request.querystring.filename': True},
-            **api_kwargs)
+        api_methods[function_name].update(**api_kwargs)
+        api.put_method(**api_methods[function_name])
     except:
         print('    * method exists?', rest_api_id, 'GET', path, file=sys.stderr)
 
     print('    * put integration', rest_api_id, 'GET', path, file=sys.stderr)
-    api.put_integration(httpMethod='GET', type='AWS_PROXY', credentials=role,
-        integrationHttpMethod='POST', passthroughBehavior='WHEN_NO_MATCH',
+    api_integrations[function_name].update(**api_kwargs)
+    api.put_integration(credentials=role, type='AWS_PROXY',
         uri=f'arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/{function_arn}/invocations',
-        #requestParameters={'integration.request.querystring.filename': 'method.request.querystring.filename'},
-        **api_kwargs)
+        integrationHttpMethod='POST', passthroughBehavior='WHEN_NO_MATCH',
+        **api_integrations[function_name])
 
     print('    * create deployment', rest_api_id, 'test', file=sys.stderr)
     api.create_deployment(stageName='test', restApiId=rest_api_id)
 
-    print('    * done with', f'{api._endpoint.host}/restapis/{rest_api_id}/test/_user_request_/{path}')
+    print('    * done with', f'{api._endpoint.host}/restapis/{rest_api_id}/test/_user_request_/{path}', file=sys.stderr)
 
 parser = argparse.ArgumentParser(description='Update Lambda function.')
 parser.add_argument('path', help='Function code path')
@@ -105,4 +122,4 @@ if __name__ == '__main__':
     api = boto3.client('apigateway', region_name='us-east-1')
     role = os.environ.get('AWS_IAM_ROLE')
     arn = publish_function(lam, args.name, args.path, env, role)
-    publish_api(api, 'DistrictGraphs', arn, args.name.split('-')[-1], role)
+    publish_api(api, 'DistrictGraphs', arn, args.name, role)
