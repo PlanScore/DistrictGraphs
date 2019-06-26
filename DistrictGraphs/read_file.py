@@ -1,4 +1,5 @@
-import csv, io, os
+import csv, io, os, json
+import urllib.parse
 import boto3
 import networkx
 import itsdangerous
@@ -19,11 +20,20 @@ def lambda_handler(event, context):
     districts = polygonize.polygonize_assignment(assignments, graph)
     geojson = polygonize.districts_geojson(districts)
     
+    s3.put_object(Bucket='districtgraphs', Key=f'{id}.geojson',
+        ACL='public-read', ContentType='application/json',
+        Body=json.dumps(geojson).encode('utf8'),
+        )
+    
+    url = urllib.parse.urljoin(constants.S3_ENDPOINT_URL, f'/districtgraphs/{id}.geojson')
+    
     return {
         'statusCode': '200',
         'headers': {
             'Access-Control-Allow-Origin': '*',
             'Content-Type': 'application/json',
             },
-        'body': geojson
+        'body': json.dumps({
+            'url': url,
+            })
         }
