@@ -59,7 +59,7 @@ jobs:
       - restore_cache:
           keys:
             - deploy-dependencies-{{ checksum ".circleci/config.yml" }}
-      - run: pip install boto3
+      - run: pip install boto3==1.9.169
       - save_cache:
           paths:
             - ~/.cache/pip

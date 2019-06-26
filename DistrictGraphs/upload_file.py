@@ -1,6 +1,6 @@
 import urllib.parse, json
 import boto3, itsdangerous
-from . import constants
+from . import constants, util
 
 def lambda_handler(event, context):
     '''
@@ -15,15 +15,16 @@ def lambda_handler(event, context):
     url1 = s3.generate_presigned_url(ClientMethod='put_object', HttpMethod='PUT',
             Params={'Bucket': 'districtgraphs', 'Key': key})
     
-    url2 = urllib.parse.urljoin(event['resource'], f'read_file?{query}')
+    url2 = urllib.parse.urljoin(util.event_url(event), f'read_file?{query}')
     
     body = {
         'put_file_href': url1,
         'read_file_href': url2,
+        'event': event,
         }
 
     return {
         'statusCode': '200',
         'headers': {'Access-Control-Allow-Origin': '*'},
-        'body': json.dumps(body)
+        'body': json.dumps(body, indent=2)
         }
