@@ -46,8 +46,8 @@ function_arn2 = deploy.publish_function(lam, 'DistrictGraphs-read_file', CODE_PA
 print('--> Set up API Gateway', ENDPOINT_API)
 api = boto3.client('apigateway', endpoint_url=ENDPOINT_API, region_name='us-east-1', **AWS_CREDS)
 
-deploy.publish_api(api, 'DistrictGraphs', function_arn1, 'upload_file')
-deploy.publish_api(api, 'DistrictGraphs', function_arn2, 'read_file')
+deploy.publish_api(api, 'DistrictGraphs', function_arn1, 'upload_file', 'Nobody')
+deploy.publish_api(api, 'DistrictGraphs', function_arn2, 'read_file', 'Nobody')
 
 # S3 Bucket setup
 
