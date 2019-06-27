@@ -56,14 +56,7 @@ jobs:
     steps:
       - checkout
       - run: pyenv global 3.6.5
-      - restore_cache:
-          keys:
-            - deploy-dependencies-{{ checksum ".circleci/config.yml" }}
-      - run: pip install boto3==1.9.169
-      - save_cache:
-          paths:
-            - ~/.cache/pip
-          key: deploy-dependencies-{{ checksum ".circleci/config.yml" }}
+      - run: pip install boto3
       - attach_workspace:
           at: ~/repo
       - run: make live-lambda
