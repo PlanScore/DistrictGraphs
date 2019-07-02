@@ -2,7 +2,7 @@ import logging
 import argparse
 import geopandas
 import networkx
-from . import blocks_frame_graph
+from . import convert
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +22,7 @@ def main():
     frame = geopandas.read_file(args.shapefile)
 
     logger.info(f'Converting to graph...')
-    graph = blocks_frame_graph(frame, 'GEOID10')
+    graph = convert.blocks_frame_graph(frame, 'GEOID10')
 
     logger.info(f'Writing {args.graphfile}...')
     networkx.write_gpickle(graph, args.graphfile)
