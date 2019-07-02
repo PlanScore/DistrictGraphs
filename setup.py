@@ -25,11 +25,13 @@ setup(
             'geopandas == 0.5.0',
             'pandas == 0.24.2',
             'Rtree == 0.8.3',
+            'psycopg2 == 2.8.3',
             ],
         },
     entry_points = dict(
         console_scripts = [
             'geo2graph = DistrictGraphs.geo2graph:main',
+            'pgsql2graph = DistrictGraphs.pgsql2graph:main',
             'dwim = DistrictGraphs.dwim:main',
             ]
         ),
