@@ -62,6 +62,8 @@ with open('madison3.pickle', 'rb') as file:
     data = file.read()
     s3.put_object(Bucket=BUCKETNAME, Key=f'graphs/{file.name}',
         ACL='public-read', Body=data, ContentType='application/binary')
+    s3.put_object(Bucket=BUCKETNAME, Key='graphs/55/55025-tabblock.pickle',
+        ACL='public-read', Body=data, ContentType='application/binary')
 
 exit()
 

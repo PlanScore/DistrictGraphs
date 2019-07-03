@@ -16,7 +16,10 @@ def lambda_handler(event, context):
     assignments = polygonize.parse_assignments(object['Body'])
     
     path = os.path.join(os.path.dirname(__file__), 'tests/data/madison3.pickle')
-    graph = networkx.read_gpickle(path)
+    obj2 = s3.get_object(Bucket='districtgraphs', Key='graphs/55/55025-tabblock.pickle')
+    with open('/tmp/pickle.pickle', 'wb') as file:
+        file.write(obj2['Body'].read())
+    graph = networkx.read_gpickle('/tmp/pickle.pickle')
     districts = polygonize.polygonize_assignment(assignments, graph)
     geojson = polygonize.districts_geojson(districts)
     
