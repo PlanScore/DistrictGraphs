@@ -30,6 +30,17 @@ def districts_geojson(districts):
         }
     return geojson
 
+def get_county_graph_paths(layer, assignments):
+    '''
+    '''
+    paths = set()
+    
+    for assignment in assignments:
+        state_fips, county_fips = assignment.block[:2], assignment.block[:5]
+        paths.add(f'{state_fips}/{county_fips}-{layer}.pickle')
+    
+    return paths
+
 def polygonize_assignment(assignments, graph):
     '''
     '''

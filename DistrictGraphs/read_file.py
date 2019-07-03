@@ -1,9 +1,22 @@
 import csv, io, os, json
 import urllib.parse
+import functools
 import boto3
 import networkx
 import itsdangerous
-from . import constants, polygonize
+from . import constants, polygonize, util
+
+def load_graph(s3, bucket, path):
+    '''
+    '''
+    print('Loading', bucket, f'graphs/{path}')
+
+    obj2 = s3.get_object(Bucket=bucket, Key=f'graphs/{path}')
+
+    with open('/tmp/pickle.pickle', 'wb') as file:
+        file.write(obj2['Body'].read())
+
+    return networkx.read_gpickle('/tmp/pickle.pickle')
 
 def lambda_handler(event, context):
     '''
@@ -15,11 +28,9 @@ def lambda_handler(event, context):
     object = s3.get_object(Bucket='districtgraphs', Key=id)
     assignments = polygonize.parse_assignments(object['Body'])
     
-    path = os.path.join(os.path.dirname(__file__), 'tests/data/madison3.pickle')
-    obj2 = s3.get_object(Bucket='districtgraphs', Key='graphs/55/55025-tabblock.pickle')
-    with open('/tmp/pickle.pickle', 'wb') as file:
-        file.write(obj2['Body'].read())
-    graph = networkx.read_gpickle('/tmp/pickle.pickle')
+    graph_paths = polygonize.get_county_graph_paths('tabblock', assignments)
+    graphs = [load_graph(s3, 'districtgraphs', path) for path in graph_paths]
+    graph = functools.reduce(util.combine_digraphs, graphs)
     districts = polygonize.polygonize_assignment(assignments, graph)
     geojson = polygonize.districts_geojson(districts)
     

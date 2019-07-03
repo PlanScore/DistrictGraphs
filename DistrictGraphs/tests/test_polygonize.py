@@ -47,6 +47,46 @@ class TestPolygonize (unittest.TestCase):
         self.assertEqual(assignments[4], ('550250011011018', '3'))
         self.assertEqual(assignments[5], ('550250011011019', '3'))
     
+    def test_get_county_graph_paths_tracts(self):
+        assignments = [
+            polygonize.Assignment('550250011011014', '1'),
+            polygonize.Assignment('550250011011016', '2'),
+            polygonize.Assignment('550250011011018', '3'),
+            ]
+        
+        paths = polygonize.get_county_graph_paths('tract', assignments)
+        self.assertEqual(paths, {'55/55025-tract.pickle'})
+    
+    def test_get_county_graph_paths_vtds(self):
+        assignments = [
+            polygonize.Assignment('550250011011014', '1'),
+            polygonize.Assignment('550250011011016', '2'),
+            polygonize.Assignment('550250011011018', '3'),
+            ]
+        
+        paths = polygonize.get_county_graph_paths('vtd', assignments)
+        self.assertEqual(paths, {'55/55025-vtd.pickle'})
+    
+    def test_get_county_graph_paths_bgs(self):
+        assignments = [
+            polygonize.Assignment('550250011011014', '1'),
+            polygonize.Assignment('550250011011016', '2'),
+            polygonize.Assignment('550250011011018', '3'),
+            ]
+        
+        paths = polygonize.get_county_graph_paths('bg', assignments)
+        self.assertEqual(paths, {'55/55025-bg.pickle'})
+    
+    def test_get_county_graph_paths_blocks(self):
+        assignments = [
+            polygonize.Assignment('550250011011014', '1'),
+            polygonize.Assignment('550250011011016', '2'),
+            polygonize.Assignment('550250011011018', '3'),
+            ]
+        
+        paths = polygonize.get_county_graph_paths('tabblock', assignments)
+        self.assertEqual(paths, {'55/55025-tabblock.pickle'})
+    
     def test_polygonize_assignment1(self):
         graph = networkx.read_gpickle(os.path.join(TESTS_DATA, 'madison3.pickle'))
         
