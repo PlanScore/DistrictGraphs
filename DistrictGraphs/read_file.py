@@ -1,4 +1,4 @@
-import csv, io, os, json
+import csv, io, os, json, tempfile
 import functools
 import boto3
 import networkx
@@ -10,11 +10,12 @@ def load_graph(s3, bucket, path):
     print('Loading', bucket, f'graphs/{path}')
 
     obj2 = s3.get_object(Bucket=bucket, Key=f'graphs/{path}')
+    
+    handle, tmp_path = tempfile.mkstemp(prefix='graph-', suffix='.pickle')
+    os.write(handle, obj2['Body'].read())
+    os.close(handle)
 
-    with open('/tmp/pickle.pickle', 'wb') as file:
-        file.write(obj2['Body'].read())
-
-    return networkx.read_gpickle('/tmp/pickle.pickle')
+    return networkx.read_gpickle(tmp_path)
 
 def lambda_handler(event, context):
     '''
