@@ -27,6 +27,13 @@ def lambda_handler(event, context):
     object = s3.get_object(Bucket='districtgraphs', Key=assignments_path)
     assignments = polygonize.parse_assignments(object['Body'])
     
+    lam = boto3.client('lambda', endpoint_url=constants.LAMBDA_ENDPOINT_URL)
+    district_ids = {assignment.district for assignment in assignments}
+    for district_id in district_ids:
+        print('Invoking DistrictGraphs-build_district for', district_id)
+        lam.invoke(FunctionName='DistrictGraphs-build_district', InvocationType='Event',
+            Payload=json.dumps({'key': assignments_path, 'district': district_id, 'layer': layer}))
+    
     graph_paths = polygonize.get_county_graph_paths(layer, assignments)
     graphs = [load_graph(s3, 'districtgraphs', path) for path in graph_paths]
     graph = functools.reduce(util.combine_digraphs, graphs)

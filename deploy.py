@@ -12,6 +12,7 @@ if 'AWS_LAMBDA_DLQ_ARN' in os.environ:
 functions = {
     'DistrictGraphs-upload_file': dict(Handler='lambda.upload_file', Timeout=3, **common),
     'DistrictGraphs-read_file': dict(Handler='lambda.read_file', Timeout=300, MemorySize=2048, **common),
+    'DistrictGraphs-build_district': dict(Handler='lambda.build_district', Timeout=300, MemorySize=2048, **common),
     }
 
 api_methods = {
@@ -126,6 +127,9 @@ if __name__ == '__main__':
     api = boto3.client('apigateway', region_name='us-east-1')
     role = os.environ.get('AWS_IAM_ROLE')
     arn = publish_function(lam, args.name, args.path, env, role)
+    if args.name not in api_methods:
+        print('=== No API Gateway for', args.name, file=sys.stderr)
+        exit()
     rest_api_id = update_api(api, 'DistrictGraphs', arn, args.name, role)
     time.sleep(random.randint(0, 5))
     deploy_api(api, rest_api_id)

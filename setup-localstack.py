@@ -40,6 +40,7 @@ print('    Environment:', ' '.join(['='.join(kv) for kv in env.items()]))
 
 function_arn1 = deploy.publish_function(lam, 'DistrictGraphs-upload_file', CODE_PATH, env, 'nobody')
 function_arn2 = deploy.publish_function(lam, 'DistrictGraphs-read_file', CODE_PATH, env, 'nobody')
+function_arn3 = deploy.publish_function(lam, 'DistrictGraphs-build_district', CODE_PATH, env, 'nobody')
 
 # API Gateway setup
 
