@@ -21,11 +21,11 @@ def lambda_handler(event, context):
     '''
     '''
     layer = event['queryStringParameters'].get('layer', 'tabblock')
-    signature = event['queryStringParameters']['signature']
-    id = itsdangerous.Signer(constants.SECRET).unsign(signature).decode('utf8')
+    signed_filepath = event['queryStringParameters']['filepath']
+    filepath = itsdangerous.Signer(constants.SECRET).unsign(signed_filepath).decode('utf8')
     
     s3 = boto3.client('s3', endpoint_url=constants.S3_ENDPOINT_URL)
-    object = s3.get_object(Bucket='districtgraphs', Key=id)
+    object = s3.get_object(Bucket='districtgraphs', Key=filepath)
     assignments = polygonize.parse_assignments(object['Body'])
     
     graph_paths = polygonize.get_county_graph_paths(layer, assignments)
@@ -34,12 +34,12 @@ def lambda_handler(event, context):
     districts = polygonize.polygonize_assignment(assignments, graph)
     geojson = polygonize.districts_geojson(districts)
     
-    s3.put_object(Bucket='districtgraphs', Key=f'{id}.geojson',
+    s3.put_object(Bucket='districtgraphs', Key=f'{filepath}.geojson',
         ACL='public-read', ContentType='application/json',
         Body=json.dumps(geojson).encode('utf8'),
         )
     
-    url = constants.S3_URL_PATTERN.format(b='districtgraphs', k=f'{id}.geojson')
+    url = constants.S3_URL_PATTERN.format(b='districtgraphs', k=f'{filepath}.geojson')
     
     return {
         'statusCode': '200',

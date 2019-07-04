@@ -18,7 +18,7 @@ api_methods = {
     'DistrictGraphs-upload_file': dict(httpMethod='GET', authorizationType='NONE',
         requestParameters={'method.request.querystring.filename': True}),
     'DistrictGraphs-read_file': dict(httpMethod='GET', authorizationType='NONE',
-        requestParameters={'method.request.querystring.signature': True}),
+        requestParameters={'method.request.querystring.filepath': True}),
     }
 
 api_integrations = {
@@ -26,7 +26,7 @@ api_integrations = {
         #requestParameters={'integration.request.querystring.filename': 'method.request.querystring.filename'},
         ),
     'DistrictGraphs-read_file': dict(httpMethod='GET',
-        #requestParameters={'integration.request.querystring.signature': 'method.request.querystring.signature'},
+        #requestParameters={'integration.request.querystring.filepath': 'method.request.querystring.filepath'},
         ),
     }
 
@@ -90,13 +90,13 @@ def update_api(api, api_name, function_arn, function_name, role):
         api_kwargs = dict(restApiId=rest_api_id, resourceId=resource['id'])
     
     try:
-        print('    * put method', rest_api_id, 'GET', path, file=sys.stderr)
+        print('    * put method', rest_api_id, api_methods[function_name]['httpMethod'], path, file=sys.stderr)
         api_methods[function_name].update(**api_kwargs)
         api.put_method(**api_methods[function_name])
     except:
-        print('    * method exists?', rest_api_id, 'GET', path, file=sys.stderr)
+        print('    * method exists?', rest_api_id, api_methods[function_name]['httpMethod'], path, file=sys.stderr)
 
-    print('    * put integration', rest_api_id, 'GET', path, file=sys.stderr)
+    print('    * put integration', rest_api_id, api_integrations[function_name]['httpMethod'], path, file=sys.stderr)
     api_integrations[function_name].update(**api_kwargs)
     api.put_integration(credentials=role, type='AWS_PROXY',
         uri=f'arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/{function_arn}/invocations',
