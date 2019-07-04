@@ -13,8 +13,24 @@ def parse_assignments(file):
     '''
     '''
     rows = csv.reader(io.StringIO(file.read().decode('utf8')))
-    assignments = [Assignment(block, district) for (block, district) in rows]
-    return assignments
+    head = next(rows)
+
+    block_i, district_i = None, None
+
+    for (index, value) in enumerate(head):
+        if value.lower() in ('id', 'geoid', 'geoid10'):
+            block_i = index
+        if value.lower() in ('district', 'district_id'):
+            district_i = index
+    
+    if block_i is not None and district_i is not None:
+        return [Assignment(row[block_i], row[district_i]) for row in rows]
+    
+    if block_i is None and district_i is None:
+        return [Assignment(head[0], head[1])] \
+             + [Assignment(row[0], row[1]) for row in rows]
+    
+    raise ValueError('Mixed signals in assignments file')
 
 def districts_geojson(districts):
     '''

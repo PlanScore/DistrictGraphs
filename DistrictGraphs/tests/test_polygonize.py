@@ -47,6 +47,51 @@ class TestPolygonize (unittest.TestCase):
         self.assertEqual(assignments[4], ('550250011011018', '3'))
         self.assertEqual(assignments[5], ('550250011011019', '3'))
     
+    def test_parse_assignments4(self):
+        with open(os.path.join(TESTS_DATA, 'DB-db1-census-tracts-export.csv'), 'rb') as file:
+            assignments = polygonize.parse_assignments(file)
+        
+        self.assertEqual(len(assignments), 9)
+        self.assertEqual(assignments[0], ('42047951000', '1'))
+        self.assertEqual(assignments[1], ('42031160900', '1'))
+        self.assertEqual(assignments[2], ('42031160400', '1'))
+        self.assertEqual(assignments[3], ('42007603802', '2'))
+        self.assertEqual(assignments[4], ('42003414102', '2'))
+        self.assertEqual(assignments[5], ('42073010100', '2'))
+        self.assertEqual(assignments[6], ('42003130300', '3'))
+        self.assertEqual(assignments[7], ('42003070800', '3'))
+        self.assertEqual(assignments[8], ('42003980000', '3'))
+    
+    def test_parse_assignments5(self):
+        with open(os.path.join(TESTS_DATA, 'DRA-NC-2016-Contingent-Corrected-map.csv'), 'rb') as file:
+            assignments = polygonize.parse_assignments(file)
+        
+        self.assertEqual(len(assignments), 9)
+        self.assertEqual(assignments[0], ('370010205012023', '6'))
+        self.assertEqual(assignments[1], ('370010205012019', '6'))
+        self.assertEqual(assignments[2], ('370010205012038', '6'))
+        self.assertEqual(assignments[3], ('370179501002090', '7'))
+        self.assertEqual(assignments[4], ('370179501002084', '7'))
+        self.assertEqual(assignments[5], ('370179501002100', '7'))
+        self.assertEqual(assignments[6], ('370250424011031', '8'))
+        self.assertEqual(assignments[7], ('370250412001027', '8'))
+        self.assertEqual(assignments[8], ('370250407031003', '8'))
+    
+    def test_parse_assignments6(self):
+        with open(os.path.join(TESTS_DATA, 'DRA-NC-Congress-2016BG.csv'), 'rb') as file:
+            assignments = polygonize.parse_assignments(file)
+        
+        self.assertEqual(len(assignments), 9)
+        self.assertEqual(assignments[0], ('370439501003', '13'))
+        self.assertEqual(assignments[1], ('370439502003', '13'))
+        self.assertEqual(assignments[2], ('370439502002', '13'))
+        self.assertEqual(assignments[3], ('370459504004', '12'))
+        self.assertEqual(assignments[4], ('370459505002', '12'))
+        self.assertEqual(assignments[5], ('370459505003', '12'))
+        self.assertEqual(assignments[6], ('371219502001', '11'))
+        self.assertEqual(assignments[7], ('371219502003', '11'))
+        self.assertEqual(assignments[8], ('371219503001', '11'))
+    
     def test_get_county_graph_paths_tracts(self):
         assignments = [
             polygonize.Assignment('550250011011014', '1'),
