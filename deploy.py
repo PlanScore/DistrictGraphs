@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import sys, argparse, boto3, os, copy, time
+import sys, argparse, boto3, os, copy, time, random
 import botocore.exceptions
 
 common = dict(
@@ -62,7 +62,7 @@ def publish_function(lam, name, path, env, role):
     
     return arn
 
-def publish_api(api, api_name, function_arn, function_name, role):
+def update_api(api, api_name, function_arn, function_name, role):
     '''
     '''
     path = function_name.split('-')[-1]
@@ -103,10 +103,13 @@ def publish_api(api, api_name, function_arn, function_name, role):
         integrationHttpMethod='POST', passthroughBehavior='WHEN_NO_MATCH',
         **api_integrations[function_name])
 
+    print('    * done with', f'{api._endpoint.host}/restapis/{rest_api_id}/test/_user_request_/{path}', file=sys.stderr)
+
+    return rest_api_id
+
+def deploy_api(api, rest_api_id):
     print('    * create deployment', rest_api_id, 'test', file=sys.stderr)
     api.create_deployment(stageName='test', restApiId=rest_api_id)
-
-    print('    * done with', f'{api._endpoint.host}/restapis/{rest_api_id}/test/_user_request_/{path}', file=sys.stderr)
 
 parser = argparse.ArgumentParser(description='Update Lambda function.')
 parser.add_argument('path', help='Function code path')
@@ -122,4 +125,6 @@ if __name__ == '__main__':
     api = boto3.client('apigateway', region_name='us-east-1')
     role = os.environ.get('AWS_IAM_ROLE')
     arn = publish_function(lam, args.name, args.path, env, role)
-    publish_api(api, 'DistrictGraphs', arn, args.name, role)
+    rest_api_id = update_api(api, 'DistrictGraphs', arn, args.name, role)
+    time.sleep(random.randint(0, 5))
+    deploy_api(api, rest_api_id)
