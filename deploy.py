@@ -16,7 +16,8 @@ functions = {
 
 api_methods = {
     'DistrictGraphs-upload_file': dict(httpMethod='GET', authorizationType='NONE',
-        requestParameters={'method.request.querystring.filename': True}),
+        #requestParameters={'method.request.querystring.filename': True},
+        ),
     'DistrictGraphs-read_file': dict(httpMethod='GET', authorizationType='NONE',
         requestParameters={'method.request.querystring.filepath': True}),
     }

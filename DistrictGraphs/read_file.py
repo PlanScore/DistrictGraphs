@@ -2,7 +2,6 @@ import csv, io, os, json
 import functools
 import boto3
 import networkx
-import itsdangerous
 from . import constants, polygonize, util
 
 def load_graph(s3, bucket, path):
@@ -21,11 +20,10 @@ def lambda_handler(event, context):
     '''
     '''
     layer = event['queryStringParameters'].get('layer', 'tabblock')
-    signed_filepath = event['queryStringParameters']['filepath']
-    filepath = itsdangerous.Signer(constants.SECRET).unsign(signed_filepath).decode('utf8')
+    assignments_path = event['queryStringParameters']['filepath']
     
     s3 = boto3.client('s3', endpoint_url=constants.S3_ENDPOINT_URL)
-    object = s3.get_object(Bucket='districtgraphs', Key=filepath)
+    object = s3.get_object(Bucket='districtgraphs', Key=assignments_path)
     assignments = polygonize.parse_assignments(object['Body'])
     
     graph_paths = polygonize.get_county_graph_paths(layer, assignments)
@@ -34,12 +32,14 @@ def lambda_handler(event, context):
     districts = polygonize.polygonize_assignment(assignments, graph)
     geojson = polygonize.districts_geojson(districts)
     
-    s3.put_object(Bucket='districtgraphs', Key=f'{filepath}.geojson',
+    geojson_path = os.path.join(os.path.dirname(assignments_path), 'districts.geojson')
+    
+    s3.put_object(Bucket='districtgraphs', Key=geojson_path,
         ACL='public-read', ContentType='application/json',
         Body=json.dumps(geojson).encode('utf8'),
         )
     
-    url = constants.S3_URL_PATTERN.format(b='districtgraphs', k=f'{filepath}.geojson')
+    geojson_url = constants.S3_URL_PATTERN.format(b='districtgraphs', k=geojson_path)
     
     return {
         'statusCode': '200',
@@ -48,6 +48,6 @@ def lambda_handler(event, context):
             'Content-Type': 'application/json',
             },
         'body': json.dumps({
-            'url': url,
+            'geojson_url': geojson_url,
             })
         }

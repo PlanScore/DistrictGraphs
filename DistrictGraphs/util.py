@@ -4,9 +4,9 @@ import networkx
 def event_url(event):
     '''
     '''
-    scheme = event['headers'].get('X-Forwarded-Proto') or 'http'
-    host = event['headers']['Host']
-    query = urllib.parse.urlencode(event['queryStringParameters'])
+    scheme = event.get('headers', {}).get('X-Forwarded-Proto') or 'http'
+    host = event.get('headers', {}).get('Host')
+    query = urllib.parse.urlencode(event.get('queryStringParameters') or {})
     
     # only seems true running at *.execute-api.us-east-1.amazonaws.com
     is_raw_gateway = (event['requestContext'].get('path') != event.get('path'))
