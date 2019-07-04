@@ -15,7 +15,7 @@ def lambda_handler(event, context):
     url1 = s3.generate_presigned_url(ClientMethod='put_object', HttpMethod='PUT',
             Params={'Bucket': 'districtgraphs', 'Key': key})
     
-    url2 = urllib.parse.urljoin(util.event_url(event), f'read_file?{query}')
+    url2 = urllib.parse.urljoin(util.event_url(event), f'read_file?{query}{{&layer}}')
     
     body = {
         'put_file_href': url1,

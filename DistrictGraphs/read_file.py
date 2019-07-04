@@ -1,5 +1,4 @@
 import csv, io, os, json
-import urllib.parse
 import functools
 import boto3
 import networkx
@@ -21,6 +20,7 @@ def load_graph(s3, bucket, path):
 def lambda_handler(event, context):
     '''
     '''
+    layer = event['queryStringParameters'].get('layer', 'tabblock')
     signature = event['queryStringParameters']['signature']
     id = itsdangerous.Signer(constants.SECRET).unsign(signature).decode('utf8')
     
@@ -28,7 +28,7 @@ def lambda_handler(event, context):
     object = s3.get_object(Bucket='districtgraphs', Key=id)
     assignments = polygonize.parse_assignments(object['Body'])
     
-    graph_paths = polygonize.get_county_graph_paths('tabblock', assignments)
+    graph_paths = polygonize.get_county_graph_paths(layer, assignments)
     graphs = [load_graph(s3, 'districtgraphs', path) for path in graph_paths]
     graph = functools.reduce(util.combine_digraphs, graphs)
     districts = polygonize.polygonize_assignment(assignments, graph)
@@ -39,7 +39,7 @@ def lambda_handler(event, context):
         Body=json.dumps(geojson).encode('utf8'),
         )
     
-    url = urllib.parse.urljoin(constants.S3_ENDPOINT_URL, f'/districtgraphs/{id}.geojson')
+    url = constants.S3_URL_PATTERN.format(b='districtgraphs', k=f'{id}.geojson')
     
     return {
         'statusCode': '200',
