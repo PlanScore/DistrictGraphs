@@ -5,6 +5,9 @@ import networkx
 import shapely.wkt
 from . import constants, polygonize, util
 
+FUNCTION_NAME = 'DistrictGraphs-build_district'
+WKT_FORMAT = 'district-{id}.wkt'
+
 def load_graph(s3, bucket, path):
     '''
     '''
@@ -38,11 +41,11 @@ def lambda_handler(event, context):
     graph = functools.reduce(util.combine_digraphs, graphs)
 
     districts = polygonize.polygonize_assignment(district_assignments, graph)
-    wkt_path = os.path.join(os.path.dirname(assignments_path), f'district-{district_id}.wkt')
+    wkt_path = os.path.join(os.path.dirname(assignments_path), WKT_FORMAT.format(id=district_id))
     geometry = districts[district_id]
     
     s3.put_object(Bucket='districtgraphs', Key=wkt_path,
-        ACL='public-read', ContentType='application/json',
+        ACL='public-read', ContentType='text/plain',
         Body=shapely.wkt.dumps(geometry, rounding_precision=6),
         )
     

@@ -1,8 +1,9 @@
-import csv, io, os, json, tempfile
+import csv, io, os, json, tempfile, time
 import functools
 import boto3
+import botocore.exceptions
 import networkx
-from . import constants, polygonize, util
+from . import constants, polygonize, util, build_district
 
 def load_graph(s3, bucket, path):
     '''
@@ -22,25 +23,40 @@ def lambda_handler(event, context):
     '''
     layer = event['queryStringParameters'].get('layer', 'tabblock')
     assignments_path = event['queryStringParameters']['filepath']
+    assignments_dir = os.path.dirname(assignments_path)
     
     s3 = boto3.client('s3', endpoint_url=constants.S3_ENDPOINT_URL)
     object = s3.get_object(Bucket='districtgraphs', Key=assignments_path)
     assignments = polygonize.parse_assignments(object['Body'])
     
-    lam = boto3.client('lambda', endpoint_url=constants.LAMBDA_ENDPOINT_URL)
     district_ids = {assignment.district for assignment in assignments}
+
+    lam = boto3.client('lambda', endpoint_url=constants.LAMBDA_ENDPOINT_URL)
     for district_id in district_ids:
-        print('Invoking DistrictGraphs-build_district for', district_id)
-        lam.invoke(FunctionName='DistrictGraphs-build_district', InvocationType='Event',
+        print('Invoking', build_district.FUNCTION_NAME, 'for', district_id)
+        lam.invoke(FunctionName=build_district.FUNCTION_NAME, InvocationType='Event',
             Payload=json.dumps({'key': assignments_path, 'district': district_id, 'layer': layer}))
     
-    graph_paths = polygonize.get_county_graph_paths(layer, assignments)
-    graphs = [load_graph(s3, 'districtgraphs', path) for path in graph_paths]
-    graph = functools.reduce(util.combine_digraphs, graphs)
-    districts = polygonize.polygonize_assignment(assignments, graph)
-    geojson = polygonize.districts_geojson(districts)
+    for district_id in district_ids:
+        # Wait for one expected tile
+        while True:
+            expected_wkt = os.path.join(assignments_dir,
+                build_district.WKT_FORMAT.format(id=district_id))
+            
+            try:
+                object = s3.get_object(Bucket='districtgraphs', Key=expected_wkt)
+            except botocore.exceptions.ClientError:
+                # Did not find the expected wkt, wait a little before checking
+                print('Did not find', expected_wkt)
+                time.sleep(3)
+            else:
+                # Found the expected wkt, break out of this loop
+                print('Found', expected_wkt)
+                break
+
+    geojson = {'type': 'Empty'}
     
-    geojson_path = os.path.join(os.path.dirname(assignments_path), 'districts.geojson')
+    geojson_path = os.path.join(assignments_dir, 'districts.geojson')
     
     s3.put_object(Bucket='districtgraphs', Key=geojson_path,
         ACL='public-read', ContentType='application/json',
