@@ -31,7 +31,7 @@ def lambda_handler(event, context):
     body = {
         'assignments_url': put_url,
         'districts_url': read_url,
-        'event': event,
+        #'event': event,
         }
 
     return {

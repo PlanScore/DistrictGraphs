@@ -30,8 +30,13 @@ class Status:
 def get_token(s3, bucket, assignments_path, layer):
     '''
     '''
-    assignments_obj = s3.head_object(Bucket=bucket, Key=assignments_path)
-    token = f'{assignments_obj["ETag"]}|{layer}'
+    try:
+        assignments_obj = s3.head_object(Bucket=bucket, Key=assignments_path)
+    except:
+        token = None
+    else:
+        token = f'{assignments_obj["ETag"]}|{layer}'
+
     return token
 
 def get_status(s3, bucket, assignments_dir):
@@ -96,7 +101,7 @@ def lambda_handler(event, context):
     token = get_token(s3, 'districtgraphs', assignments_path, layer)
     status = get_status(s3, 'districtgraphs', assignments_dir)
     
-    if status.token != token:
+    if status.token != token and token is not None:
         object = s3.get_object(Bucket='districtgraphs', Key=assignments_path)
         assignments = polygonize.parse_assignments(object['Body'])
         
