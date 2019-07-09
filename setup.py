@@ -33,6 +33,8 @@ setup(
             'geo2graph = DistrictGraphs.geo2graph:main',
             'pgsql2graph = DistrictGraphs.pgsql2graph:main',
             'dwim = DistrictGraphs.dwim:main',
+            'benchmark-graph = DistrictGraphs.benchmark_graph:main',
+            'benchmark-union = DistrictGraphs.benchmark_union:main',
             ]
         ),
 )
