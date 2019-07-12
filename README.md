@@ -17,15 +17,17 @@ Try It
 1.  Find a BEF to experiment with. For example, Pennsylvania published their
     [2018 remedial U.S. House plan Census Block Equivalency File](http://www.pacourts.us/news-and-statistics/cases-of-public-interest/league-of-women-voters-et-al-v-the-commonwealth-of-pennsylvania-et-al-159-mm-2017).
 
-2.  Get a pair of URLs from the District Graphs API:
+2.  Get a pair of URLs from the District Graphs API. Use the `layer`
+    parameter to specify a geographic subdivision to assign, one of `tract`
+    (Census tract), `bg` (block group),  or `tabblock` (Census block).
 
-        HTTP GET https://dgraphs.planscore.org/upload_file
+        HTTP GET https://dgraphs.planscore.org/upload_file?layer=tract
         
     Response:
     
         {
           "assignments_url": "https://districtgraphs.s3.amazonaws.com/assignments/...",
-          "districts_url": "https://dgraphs.planscore.org/read_file?filepath=...{&layer}"
+          "districts_url": "https://dgraphs.planscore.org/read_file?upload=..."
         }
     
 4.  Upload your BEF to the `assignments_url`:
@@ -33,11 +35,9 @@ Try It
         HTTP PUT {assignments_url}
         Body: Contents of equivalency file
     
-5.  Expand the `districts_url` [URI template](https://tools.ietf.org/html/rfc6570)
-    with a `layer` variable, one of `tract` (Census tract), `bg` (block group), 
-    or `tabblock` (Census block) and poll until `status` is `complete`:
+5.  Poll the `districts_url` URL until `status` is `complete`:
     
-        HTTP GET https://dgraphs.planscore.org/read_file?filepath=...&layer={layer}
+        HTTP GET https://dgraphs.planscore.org/read_file?upload=...
     
     Initial response:
     
@@ -47,7 +47,7 @@ Try It
     
     Again:
     
-        HTTP GET https://dgraphs.planscore.org/read_file?filepath=...&layer={layer}
+        HTTP GET https://dgraphs.planscore.org/read_file?upload=...
     
     Completed response:
     

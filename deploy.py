@@ -17,18 +17,18 @@ functions = {
 
 api_methods = {
     'DistrictGraphs-upload_file': dict(httpMethod='GET', authorizationType='NONE',
-        #requestParameters={'method.request.querystring.filename': True},
+        requestParameters={'method.request.querystring.layer': True},
         ),
     'DistrictGraphs-read_file': dict(httpMethod='GET', authorizationType='NONE',
-        requestParameters={'method.request.querystring.filepath': True}),
+        requestParameters={'method.request.querystring.upload': True}),
     }
 
 api_integrations = {
     'DistrictGraphs-upload_file': dict(httpMethod='GET',
-        #requestParameters={'integration.request.querystring.filename': 'method.request.querystring.filename'},
+        #requestParameters={'integration.request.querystring.layer': 'method.request.querystring.layer'},
         ),
     'DistrictGraphs-read_file': dict(httpMethod='GET',
-        #requestParameters={'integration.request.querystring.filepath': 'method.request.querystring.filepath'},
+        #requestParameters={'integration.request.querystring.upload': 'method.request.querystring.upload'},
         ),
     }
 

@@ -1,12 +1,21 @@
 import os, json
-import boto3
+import boto3, itsdangerous
 from . import constants, polygonize, build_plan
+
+def extract_signed_upload(secret, upload_signed):
+    ''' 
+    '''
+    signer = itsdangerous.Signer(secret)
+    upload_path = signer.unsign(upload_signed).decode('utf8')
+    layer, assignments_path = upload_path.split(':', 1)
+
+    return layer, assignments_path
 
 def lambda_handler(event, context):
     '''
     '''
-    layer = event['queryStringParameters'].get('layer', 'tabblock')
-    assignments_path = event['queryStringParameters']['filepath']
+    upload_signed = event['queryStringParameters']['upload']
+    layer, assignments_path = extract_signed_upload(constants.SECRET, upload_signed)
     assignments_dir = os.path.dirname(assignments_path)
 
     # get assignments unique token
