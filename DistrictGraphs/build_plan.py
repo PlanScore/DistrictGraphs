@@ -5,7 +5,7 @@ import networkx
 import botocore
 import shapely.wkt
 
-from . import build_district, polygonize
+from . import build_district, polygonize, constants
 
 STATUS_STARTED = 'started'
 STATUS_COMPLETE = 'complete'
@@ -131,3 +131,36 @@ def put_plan_geojson(s3, bucket, assignments_dir, district_ids):
         )
     
     return geojson_path
+
+def read_file(s3, lam, bucket, status, token, layer, assignments_path):
+    '''
+    '''
+    assignments_dir = os.path.dirname(assignments_path)
+    
+    if status.token != token and token is not None:
+        object = s3.get_object(Bucket=bucket, Key=assignments_path)
+        assignments = polygonize.parse_assignments(object['Body'])
+        
+        status = Status(token, STATUS_STARTED,
+            sorted(list({a.district for a in assignments})), None)
+
+        fan_out_build_district(lam, assignments_path, status.district_ids, layer)
+        put_status(s3, bucket, assignments_dir, status)
+    
+    if status.state == STATUS_STARTED:
+        expected = len(status.district_ids)
+        finished = count_finished_districts(s3,
+            bucket, assignments_dir, status.district_ids)
+
+        if finished != expected:
+            return status
+        
+        geojson_path = put_plan_geojson(s3,
+            bucket, assignments_dir, status.district_ids)
+        
+        status.state = STATUS_COMPLETE
+        status.geojson_url = constants.S3_URL_PATTERN.format(b=bucket, k=geojson_path)
+        put_status(s3, bucket, assignments_dir, status)
+
+    if status.state == STATUS_COMPLETE:
+        return status

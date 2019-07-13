@@ -1,4 +1,4 @@
-import os, unittest, unittest.mock, json
+import os, unittest, unittest.mock, json, io, uuid
 import botocore
 
 from .. import build_plan, build_district
@@ -165,3 +165,142 @@ class TestBuildPlan (unittest.TestCase):
         self.assertEqual(feature3['properties']['district'], '3')
         self.assertEqual(feature3['geometry']['type'], 'Point')
         self.assertEqual(feature3['geometry']['coordinates'], [0, 0])
+    
+    @unittest.mock.patch('DistrictGraphs.build_plan.count_finished_districts')
+    @unittest.mock.patch('DistrictGraphs.build_plan.fan_out_build_district')
+    @unittest.mock.patch('DistrictGraphs.build_plan.put_status')
+    def test_read_file_start(self, put_status, fan_out_build_district, count_finished_districts):
+        assignments = b'060011234,1\n060015678,1\n060751234,2\n060755678,2'
+        s3, lam = unittest.mock.Mock(), unittest.mock.Mock()
+        s3.get_object.return_value = {'Body': io.BytesIO(assignments)}
+        token = str(uuid.uuid4())
+        status = build_plan.Status(None, None, None, None)
+        count_finished_districts.return_value = 0
+        
+        new_status = build_plan.read_file(s3, lam, 'dgraphs',
+            status, token, 'tract', 'stuff/assignments')
+
+        self.assertEqual(new_status.token, token)
+        self.assertEqual(new_status.state, build_plan.STATUS_STARTED)
+        self.assertEqual(new_status.district_ids, ['1', '2'])
+        self.assertIsNone(new_status.geojson_url)
+        
+        self.assertEqual(len(fan_out_build_district.mock_calls), 1)
+        self.assertEqual(len(put_status.mock_calls), 1)
+        
+        self.assertEqual(fan_out_build_district.mock_calls[0][1],
+            (lam, 'stuff/assignments', ['1', '2'], 'tract'))
+        
+        self.assertEqual(put_status.mock_calls[0][1][:3], (s3, 'dgraphs', 'stuff'))
+    
+    @unittest.mock.patch('DistrictGraphs.build_plan.count_finished_districts')
+    @unittest.mock.patch('DistrictGraphs.build_plan.put_plan_geojson')
+    @unittest.mock.patch('DistrictGraphs.build_plan.put_status')
+    def test_read_file_continue(self, put_status, put_plan_geojson, count_finished_districts):
+        s3, lam = unittest.mock.Mock(), unittest.mock.Mock()
+        token = str(uuid.uuid4())
+        status = build_plan.Status(token, build_plan.STATUS_STARTED, ['1', '2'], None)
+        count_finished_districts.return_value = 1
+        
+        new_status = build_plan.read_file(s3, lam, 'dgraphs',
+            status, token, 'tract', 'stuff/assignments')
+
+        self.assertEqual(new_status.token, token)
+        self.assertEqual(new_status.state, build_plan.STATUS_STARTED)
+        self.assertEqual(new_status.district_ids, ['1', '2'])
+        self.assertIsNone(new_status.geojson_url)
+        
+        self.assertEqual(len(put_plan_geojson.mock_calls), 0)
+        self.assertEqual(len(put_status.mock_calls), 0)
+    
+    @unittest.mock.patch('DistrictGraphs.build_plan.count_finished_districts')
+    @unittest.mock.patch('DistrictGraphs.build_plan.put_plan_geojson')
+    @unittest.mock.patch('DistrictGraphs.build_plan.put_status')
+    def test_read_file_complete(self, put_status, put_plan_geojson, count_finished_districts):
+        s3, lam = unittest.mock.Mock(), unittest.mock.Mock()
+        token = str(uuid.uuid4())
+        status = build_plan.Status(token, build_plan.STATUS_STARTED, ['1', '2'], None)
+        count_finished_districts.return_value = 2
+        put_plan_geojson.return_value = 'stuff/districts.geojson'
+        
+        new_status = build_plan.read_file(s3, lam, 'dgraphs',
+            status, token, 'tract', 'stuff/assignments')
+
+        self.assertEqual(new_status.token, token)
+        self.assertEqual(new_status.state, build_plan.STATUS_COMPLETE)
+        self.assertEqual(new_status.district_ids, ['1', '2'])
+        self.assertIn('dgraphs/stuff/districts.geojson', new_status.geojson_url)
+        
+        self.assertEqual(len(put_plan_geojson.mock_calls), 1)
+        self.assertEqual(len(put_status.mock_calls), 1)
+        
+        self.assertEqual(put_plan_geojson.mock_calls[0][1],
+            (s3, 'dgraphs', 'stuff', ['1', '2']))
+        
+        self.assertEqual(put_status.mock_calls[0][1][:3], (s3, 'dgraphs', 'stuff'))
+    
+    @unittest.mock.patch('DistrictGraphs.build_plan.count_finished_districts')
+    @unittest.mock.patch('DistrictGraphs.build_plan.put_plan_geojson')
+    @unittest.mock.patch('DistrictGraphs.build_plan.put_status')
+    def test_read_file_completed(self, put_status, put_plan_geojson, count_finished_districts):
+        s3, lam = unittest.mock.Mock(), unittest.mock.Mock()
+        token = str(uuid.uuid4())
+        status = build_plan.Status(token, build_plan.STATUS_COMPLETE, ['1', '2'],
+            'https://example.com/dgraphs/stuff/districts.geojson')
+        
+        new_status = build_plan.read_file(s3, lam, 'dgraphs',
+            status, token, 'tract', 'stuff/assignments')
+
+        self.assertEqual(new_status.token, token)
+        self.assertEqual(new_status.state, build_plan.STATUS_COMPLETE)
+        self.assertEqual(new_status.district_ids, ['1', '2'])
+        self.assertIn('dgraphs/stuff/districts.geojson', new_status.geojson_url)
+        
+        self.assertEqual(len(count_finished_districts.mock_calls), 0)
+        self.assertEqual(len(put_plan_geojson.mock_calls), 0)
+        self.assertEqual(len(put_status.mock_calls), 0)
+    
+    @unittest.mock.patch('DistrictGraphs.build_plan.count_finished_districts')
+    @unittest.mock.patch('DistrictGraphs.build_plan.fan_out_build_district')
+    @unittest.mock.patch('DistrictGraphs.build_plan.put_plan_geojson')
+    @unittest.mock.patch('DistrictGraphs.build_plan.put_status')
+    def test_read_file_instant(self, put_status, put_plan_geojson, fan_out_build_district, count_finished_districts):
+        assignments = b'060011234,1\n060015678,1\n060751234,2\n060755678,2'
+        s3, lam = unittest.mock.Mock(), unittest.mock.Mock()
+        s3.get_object.return_value = {'Body': io.BytesIO(assignments)}
+        token = str(uuid.uuid4())
+        status = build_plan.Status(None, None, None, None)
+        count_finished_districts.return_value = 2
+        put_plan_geojson.return_value = 'stuff/districts.geojson'
+        
+        new_status = build_plan.read_file(s3, lam, 'dgraphs',
+            status, token, 'tract', 'stuff/assignments')
+
+        self.assertEqual(new_status.token, token)
+        self.assertEqual(new_status.state, build_plan.STATUS_COMPLETE)
+        self.assertEqual(new_status.district_ids, ['1', '2'])
+        self.assertIn('dgraphs/stuff/districts.geojson', new_status.geojson_url)
+        
+        self.assertEqual(len(fan_out_build_district.mock_calls), 1)
+        self.assertEqual(len(put_plan_geojson.mock_calls), 1)
+        self.assertEqual(len(put_status.mock_calls), 2)
+        
+        self.assertEqual(fan_out_build_district.mock_calls[0][1],
+            (lam, 'stuff/assignments', ['1', '2'], 'tract'))
+        
+        self.assertEqual(put_plan_geojson.mock_calls[0][1],
+            (s3, 'dgraphs', 'stuff', ['1', '2']))
+        
+        self.assertEqual(put_status.mock_calls[0][1][:3], (s3, 'dgraphs', 'stuff'))
+        self.assertEqual(put_status.mock_calls[1][1][:3], (s3, 'dgraphs', 'stuff'))
+    
+    def test_read_file_nonsense(self):
+        s3, lam = unittest.mock.Mock(), unittest.mock.Mock()
+        token = str(uuid.uuid4())
+        status = build_plan.Status(token, 'Unknown', ['1', '2'],
+            'https://example.com/dgraphs/stuff/districts.geojson')
+        
+        new_status = build_plan.read_file(s3, lam, 'dgraphs',
+            status, token, 'tract', 'stuff/assignments')
+
+        self.assertIsNone(new_status)
