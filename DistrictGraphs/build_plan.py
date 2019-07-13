@@ -134,6 +134,12 @@ def put_plan_geojson(s3, bucket, assignments_dir, district_ids):
 
 def read_file(s3, lam, bucket, status, token, layer, assignments_path):
     '''
+        when status token matches unique token and:
+          ...status is "started": update progress, write status, respond
+          ...status is "finished": respond with redirect to status results
+        otherwise:
+          - start building districts
+          - set status to "started", write status
     '''
     assignments_dir = os.path.dirname(assignments_path)
     
