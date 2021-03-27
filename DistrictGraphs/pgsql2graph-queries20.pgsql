@@ -230,3 +230,28 @@ alter table edges_us_tabblock20 alter column geoid20a set not null;
 create index edges_us_tabblock20_geoid20a on edges_us_tabblock20 (geoid20a);
 create index edges_us_tabblock20_county on edges_us_tabblock20 (statefp20a, countyfp20a);
 cluster edges_us_tabblock20 using edges_us_tabblock20_geoid20a;
+
+
+
+alter table edges_us_tabblock20 rename column geoid20a to geoida;
+alter table edges_us_tabblock20 rename column geoid20b to geoidb;
+alter table edges_us_tabblock20 rename column statefp20a to statefpa;
+alter table edges_us_tabblock20 rename column countyfp20a to countyfpa;
+alter table edges_us_tabblock20 rename to edges_us_tabblock;
+
+alter table tl_2020_us_tabblock20 rename column statefp20 to statefp;
+alter table tl_2020_us_tabblock20 rename column countyfp20 to countyfp;
+alter table tl_2020_us_tabblock20 rename column tractce20 to tractce;
+alter table tl_2020_us_tabblock20 rename column blockce20 to blockce;
+alter table tl_2020_us_tabblock20 rename column geoid20 to geoid;
+alter table tl_2020_us_tabblock20 rename column name20 to name;
+alter table tl_2020_us_tabblock20 rename column mtfcc20 to mtfcc;
+alter table tl_2020_us_tabblock20 rename column ur20 to ur;
+alter table tl_2020_us_tabblock20 rename column uace20 to uace;
+alter table tl_2020_us_tabblock20 rename column uatype20 to uatype;
+alter table tl_2020_us_tabblock20 rename column funcstat20 to funcstat;
+alter table tl_2020_us_tabblock20 rename column aland20 to aland;
+alter table tl_2020_us_tabblock20 rename column awater20 to awater;
+alter table tl_2020_us_tabblock20 rename column intptlat20 to intptlat;
+alter table tl_2020_us_tabblock20 rename column intptlon20 to intptlon;
+alter table tl_2020_us_tabblock20 rename to tl_2020_us_tabblock;

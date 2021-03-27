@@ -28,9 +28,9 @@ def main():
     with psycopg2.connect(args.postgres) as conn:
         with conn.cursor() as db:
             db.execute(f'''
-                SELECT geoid10, ST_AsText(geom)
-                FROM tl_2010_us_{args.layer}10
-                WHERE geoid10 LIKE %s||'%%'
+                SELECT geoid, ST_AsText(geom)
+                FROM tl_2020_us_{args.layer}
+                WHERE geoid LIKE %s||'%%'
                 ''',
                 (args.geoid, ))
             
@@ -41,18 +41,18 @@ def main():
                 logger.debug(f'Node: {geoid} {center.x} {center.y}')
                             
             db.execute(f'''
-                SELECT geoid10a, geoid10b, same_state, same_county,
-                    CASE WHEN geoid10b IS NULL THEN ST_AsText(ST_Intersection(g1.geom, ST_Boundary(us.geom)))
+                SELECT geoida, geoidb, same_state, same_county,
+                    CASE WHEN geoidb IS NULL THEN ST_AsText(ST_Intersection(g1.geom, ST_Boundary(us.geom)))
                     ELSE ST_AsText(ST_Intersection(g1.geom, g2.geom))
                     END AS line
-                FROM edges_us_{args.layer}10 AS e
-                LEFT JOIN tl_2010_us_{args.layer}10 AS g1
-                    ON g1.geoid10 = geoid10a
-                LEFT JOIN tl_2010_us_{args.layer}10 AS g2
-                    ON g2.geoid10 = geoid10b
-                LEFT JOIN tl_2010_us AS us
+                FROM edges_us_{args.layer} AS e
+                LEFT JOIN tl_2020_us_{args.layer} AS g1
+                    ON g1.geoid = geoida
+                LEFT JOIN tl_2020_us_{args.layer} AS g2
+                    ON g2.geoid = geoidb
+                LEFT JOIN tl_2020_us AS us
                     ON g1.is_border
-                WHERE geoid10a LIKE %s||'%%'
+                WHERE geoida LIKE %s||'%%'
                 ''',
                 (args.geoid, ))
             
