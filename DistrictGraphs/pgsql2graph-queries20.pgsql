@@ -125,7 +125,7 @@ select tract1.geoid as geoida, tract2.geoid as geoidb,
 from tl_2020_us_tract as tract1
 join tl_2020_us_tract as tract2
     on tract1.geom && tract2.geom
-    and tract1.gid != tract2.gid
+    and tract1.ogc_fid != tract2.ogc_fid
     and ST_Relate(tract1.geom, tract2.geom, 'F***1****')
 --where tract1.statefp = '06'
 --  and tract1.countyfp = '015'
@@ -149,7 +149,7 @@ where is_border
 -- from tl_2020_us_vtd20 as vtd1
 -- join tl_2020_us_vtd20 as vtd2
 --     on vtd1.geom && vtd2.geom
---     and vtd1.gid != vtd2.gid
+--     and vtd1.ogc_fid != vtd2.ogc_fid
 --     and ST_Relate(vtd1.geom, vtd2.geom, 'F***1****')
 -- --where vtd1.statefp20 = '06'
 -- --  and vtd1.countyfp20 = '015'
@@ -173,7 +173,7 @@ select bg1.geoid as geoida, bg2.geoid as geoidb,
 from tl_2020_us_bg as bg1
 join tl_2020_us_bg as bg2
     on bg1.geom && bg2.geom
-    and bg1.gid != bg2.gid
+    and bg1.ogc_fid != bg2.ogc_fid
     and ST_Relate(bg1.geom, bg2.geom, 'F***1****')
 --where bg1.statefp = '06'
 --  and bg1.countyfp = '015'
@@ -197,7 +197,7 @@ select block1.geoid20 as geoid20a, block2.geoid20 as geoid20b,
 from tl_2020_us_tabblock20 as block1
 join tl_2020_us_tabblock20 as block2
     on block1.geom && block2.geom
-    and block1.gid != block2.gid
+    and block1.ogc_fid != block2.ogc_fid
     and ST_Relate(block1.geom, block2.geom, 'F***1****')
 --where block1.statefp20 = '06'
 --  and block1.countyfp20 = '015'
